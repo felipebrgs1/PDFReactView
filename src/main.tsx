@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 
-import PDFViewer from './components/PDFViewer.js';
+import PDFViewer from './page.js';
 
 const root = document.getElementById('root');
 

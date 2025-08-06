@@ -57,8 +57,8 @@ export default function FileUploader({
         <div className="mt-4 mb-6 w-full max-w-md">
             <div
                 className={`bg-card border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 cursor-pointer ${isDragging
-                        ? 'border-primary bg-primary/5 scale-105'
-                        : 'border-border hover:border-primary hover:bg-accent/50'
+                    ? 'border-primary bg-primary/5 scale-105'
+                    : 'border-border hover:border-primary hover:bg-red-50/50'
                     }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
