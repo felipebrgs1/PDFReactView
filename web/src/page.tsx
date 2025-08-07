@@ -20,7 +20,7 @@ const options = {
 
 const resizeObserverOptions = {};
 
-const maxWidth = 800;
+const maxWidth = 1200;
 
 type PDFFile = string | File | null;
 
