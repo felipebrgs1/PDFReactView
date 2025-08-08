@@ -8,9 +8,7 @@ FROM base AS deps
 COPY package.json bun.lock ./
 COPY apps/server/package.json apps/server/package.json
 COPY apps/web/package.json apps/web/package.json
-COPY packages/eslint-config/package.json packages/eslint-config/package.json
 COPY packages/typescript-config/package.json packages/typescript-config/package.json
-COPY packages/ui/package.json packages/ui/package.json
 RUN --mount=type=cache,target=/root/.bun \
     bun install
 

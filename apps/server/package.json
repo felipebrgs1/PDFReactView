@@ -1,28 +1,28 @@
 {
-    "name": "server",
-    "module": "src/index.ts",
-    "type": "module",
-    "private": true,
-    "devDependencies": {
-        "@types/bun": "latest",
-        "@types/pg": "^8.15.5",
-        "drizzle-kit": "^0.31.4",
-        "tsx": "^4.20.3"
-    },
-    "peerDependencies": {
-        "typescript": "^5"
-    },
-    "dependencies": {
-        "dotenv": "^17.2.1",
-        "drizzle-orm": "^0.44.4",
-        "hono": "^4.8.12",
-        "zod": "4.0.15",
-        "pg": "^8.16.3"
-    },
-    "scripts": {
-        "dev": "docker compose up --build",
-        "compose": "docker compose up",
-        "compose:build": "docker compose build",
-        "start": "bun src/index.ts"
-    }
+	"name": "server",
+	"module": "src/index.ts",
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/pg": "^8.15.5",
+		"drizzle-kit": "^0.31.4",
+		"tsx": "^4.20.3"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"dotenv": "^17.2.1",
+		"drizzle-orm": "^0.44.4",
+		"hono": "^4.8.12",
+		"zod": "4.0.15",
+		"pg": "^8.16.3"
+	},
+	"scripts": {
+		"dev": "docker compose up --build",
+		"compose": "docker compose up",
+		"compose:build": "docker compose build",
+		"start": "bun src/index.ts"
+	}
 }
