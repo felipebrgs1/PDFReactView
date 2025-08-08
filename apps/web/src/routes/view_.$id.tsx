@@ -24,6 +24,7 @@ function PDFViewPage() {
     const fileUrl = `${apiBase}/pdf/${id}`
 
     const [numPages, setNumPages] = useState<number>()
+    const [pageNumber, setPageNumber] = useState<number>(1)
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [containerWidth, setContainerWidth] = useState<number>(1000)
 
@@ -39,7 +40,11 @@ function PDFViewPage() {
     }, [])
 
     const onDocumentLoadSuccess = useCallback(
-        ({ numPages: nextNumPages }: PDFDocumentProxy) => setNumPages(nextNumPages),
+        ({ numPages: nextNumPages }: PDFDocumentProxy) => {
+            setNumPages(nextNumPages)
+            // Reset to first page after a new document loads
+            setPageNumber(1)
+        },
         [],
     )
 
@@ -54,6 +59,29 @@ function PDFViewPage() {
             </header>
 
             <main className="mx-auto max-w-5xl px-4 py-6">
+                {/* Controls */}
+                <div className="mb-4 flex items-center justify-center gap-3">
+                    <button
+                        className="px-3 py-1 rounded border text-sm disabled:opacity-50"
+                        onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+                        disabled={!numPages || pageNumber <= 1}
+                        aria-label="Página anterior"
+                    >
+                        ← Anterior
+                    </button>
+                    <span className="text-sm text-muted-foreground">
+                        Página {pageNumber} {numPages ? `de ${numPages}` : ''}
+                    </span>
+                    <button
+                        className="px-3 py-1 rounded border text-sm disabled:opacity-50"
+                        onClick={() => setPageNumber((p) => (numPages ? Math.min(numPages, p + 1) : p + 1))}
+                        disabled={!numPages || (numPages ? pageNumber >= numPages : false)}
+                        aria-label="Próxima página"
+                    >
+                        Próxima →
+                    </button>
+                </div>
+
                 <div className="flex justify-center">
                     <div ref={containerRef} className="w-full" style={{ maxWidth: 1200 }}>
                         <Document
@@ -62,14 +90,17 @@ function PDFViewPage() {
                             options={options}
                             className="flex flex-col items-center"
                         >
-                            {Array.from(new Array(numPages ?? 0), (_el, index) => (
+                            {numPages && numPages > 0 ? (
                                 <Page
-                                    key={`page_${index + 1}`}
-                                    pageNumber={index + 1}
+                                    key={`page_${pageNumber}`}
+                                    pageNumber={pageNumber}
                                     width={containerWidth}
                                     className="my-4 mx-0 shadow"
+                                    renderTextLayer={false}
+                                    renderAnnotationLayer={false}
+                                    loading={<div className="p-8 text-sm text-muted-foreground">Carregando página…</div>}
                                 />
-                            ))}
+                            ) : null}
                         </Document>
                     </div>
                 </div>
