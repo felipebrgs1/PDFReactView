@@ -62,10 +62,21 @@ export function registerRoutes(app: Hono) {
     if (!row) return c.json({ error: 'Not found' }, 404)
 
   const raw = Buffer.from(row.data, 'base64')
+  // Build a safe Content-Disposition with ASCII fallback + RFC 5987 utf-8 filename*
+  const originalName = row.filename ?? 'file.pdf'
+  // Remove diacritics then strip/replace anything non-ASCII-safe for header value
+  const asciiFallback = originalName
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '_') // keep visible ASCII only
+    .replace(/["\\]/g, '') // drop quotes/backslashes to keep quoted-string safe
+  const encodedUtf8 = encodeURIComponent(originalName)
+
   return new Response(raw, {
       headers: {
         'Content-Type': row.mimeType,
-        'Content-Disposition': `inline; filename="${row.filename}"`,
+        // Example: inline; filename="fallback.pdf"; filename*=UTF-8''real%20ñame.pdf
+        'Content-Disposition': `inline; filename="${asciiFallback}"; filename*=UTF-8''${encodedUtf8}`,
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })

@@ -12,6 +12,8 @@
     "license": "MIT",
     "dependencies": {
         "@tailwindcss/vite": "4.1.11",
+        "@tanstack/react-router": "^1.130.12",
+        "@tanstack/react-router-devtools": "^1.130.13",
         "@wojtekmaj/react-hooks": "2.0.1",
         "react": "19.1.1",
         "react-dom": "19.1.1",
@@ -19,6 +21,7 @@
         "tailwindcss": "4.1.11"
     },
     "devDependencies": {
+        "@tanstack/router-plugin": "^1.130.16",
         "@types/node": "24.2.0",
         "@types/react": "19.1.9",
         "@types/react-dom": "19.1.7",

@@ -1,2 +1,2 @@
-export { default as PDFViewer } from '../page';
+export { default as PDFViewer } from '../routes';
 export { default as FileUploader } from './FileUploader';
