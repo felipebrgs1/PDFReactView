@@ -1,6 +1,6 @@
 {
     "name": "server",
-    "module": "index.ts",
+    "module": "src/index.ts",
     "type": "module",
     "private": true,
     "devDependencies": {
@@ -19,6 +19,9 @@
         "pg": "^8.16.3"
     },
     "scripts": {
-        "dev": "docker compose up"
+        "dev": "docker compose up",
+        "compose": "docker compose up",
+        "compose:build": "docker compose build",
+        "start": "bun src/index.ts"
     }
 }

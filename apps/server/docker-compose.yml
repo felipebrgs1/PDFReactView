@@ -1,13 +1,20 @@
 services:
   server:
     build:
-      context: ./src
+      context: .
       dockerfile: Dockerfile
+      target: dev
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:${PORT:-3000}"
+    env_file: .env
     environment:
       - NODE_ENV=development
-    command: bun --watch index.ts
+    volumes:
+      - .:/app
+      - bun_cache:/root/.bun
+    command: bun --watch src/index.ts
+    depends_on:
+      - postgres
   postgres:
     image: postgres:17-alpine
     ports:
@@ -16,3 +23,14 @@ services:
       - POSTGRES_USER=dev
       - POSTGRES_PASSWORD=dev
       - POSTGRES_DB=dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data: {}
+  bun_cache: {}

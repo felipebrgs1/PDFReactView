@@ -1,3 +1,18 @@
 {
-  "name": "@repo/typescript-config"
+  "extends": "../../packages/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "bun"
+    ]
+  },
+  "include": [
+    "src",
+    "drizzle.config.ts"
+  ]
 }

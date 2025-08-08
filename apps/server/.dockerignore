@@ -1,0 +1,20 @@
+# dependencies
+node_modules
+bun.lockb
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# git
+.git
+.gitignore
+
+# misc
+Dockerfile*
+.dockerignore
+**/drizzle/**/meta
+**/drizzle/**/migrations
+**/drizzle/*.sqlite
+**/drizzle/*.db

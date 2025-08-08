@@ -1,15 +1,23 @@
-# server
+# Server
 
-To install dependencies:
+Local dev:
 
 ```bash
 bun install
+bun run dev
 ```
 
-To run:
+With Docker Compose:
 
 ```bash
-bun run index.ts
+cp .env.example .env
+bun run compose:build
+bun run compose
 ```
 
-This project was created using `bun init` in bun v1.2.19. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Environment:
+
+- PORT (default 3000)
+- DATABASE_URL (points to postgres service by default)
+
+Multi-stage Dockerfile supports dev and prod targets.
