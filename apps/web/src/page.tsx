@@ -29,6 +29,7 @@ export default function PDFViewer() {
   const [numPages, setNumPages] = useState<number>();
   const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number>();
+  const [remoteUrl, setRemoteUrl] = useState<string | null>(null);
 
   const onResize = useCallback<ResizeObserverCallback>((entries) => {
     const [entry] = entries;
@@ -40,8 +41,30 @@ export default function PDFViewer() {
 
   useResizeObserver(containerRef, resizeObserverOptions, onResize);
 
-  function handleFileSelect(selectedFile: File): void {
+  async function handleFileSelect(selectedFile: File): Promise<void> {
     setFile(selectedFile);
+    setRemoteUrl(null);
+
+    // Upload to backend
+    try {
+      const form = new FormData();
+      form.append('file', selectedFile);
+
+      const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+      const res = await fetch(`${apiBase}/upload`, {
+        method: 'POST',
+        body: form,
+      });
+      if (!res.ok) throw new Error('Falha no upload');
+      const data: { id: number; filename: string } = await res.json();
+      const fileUrl = `${apiBase}/pdf/${data.id}`;
+      setRemoteUrl(fileUrl);
+      // Switch to remote URL for viewing to ensure using canonical stored copy
+      setFile(fileUrl);
+    } catch (err) {
+      console.error(err);
+      // Keep local preview even if upload failed
+    }
   }
 
   function onDocumentLoadSuccess({ numPages: nextNumPages }: PDFDocumentProxy): void {
@@ -97,6 +120,9 @@ export default function PDFViewer() {
               ))}
             </Document>
           </div>
+          {remoteUrl && (
+            <div className="mt-2 text-sm text-muted-foreground">Armazenado em: <a className="underline" href={remoteUrl} target="_blank" rel="noreferrer">{remoteUrl}</a></div>
+          )}
         </div>
       )}
     </div>

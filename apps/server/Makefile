@@ -3,7 +3,7 @@ SHELL := /usr/bin/env bash
 .PHONY: dev up build logs down
 
 dev:
-	bun --watch src/index.ts
+	bun  src/index.ts
 
 up:
 	docker compose up

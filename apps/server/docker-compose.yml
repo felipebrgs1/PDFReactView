@@ -1,18 +1,18 @@
 services:
   server:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: apps/server/Dockerfile
       target: dev
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "${PORT:-3001}:${PORT:-3000}"
     env_file: .env
     environment:
       - NODE_ENV=development
     volumes:
-      - .:/app
+    - ../../apps/server:/app/apps/server
       - bun_cache:/root/.bun
-    command: bun --watch src/index.ts
+    command: bun run --watch src/index.ts
     depends_on:
       - postgres
   postgres:
