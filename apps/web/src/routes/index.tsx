@@ -1,135 +1,113 @@
-import { useCallback, useState } from 'react';
-import { useResizeObserver } from '@wojtekmaj/react-hooks';
-import { pdfjs, Document, Page } from 'react-pdf';
-
-import FileUploader from '../components/FileUploader';
-
+import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
+type PdfItem = {
+    id: number
+    filename: string
+    createdAt: string
+}
+
 export const Route = createFileRoute('/')({
-    component: PDFViewer,
+    component: HomeDashboard,
 })
 
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+function HomeDashboard() {
+    const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
+    const [pdfs, setPdfs] = useState<PdfItem[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const skeletonKeys = ['s1', 's2', 's3', 's4']
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url,
-).toString();
-
-const options = {
-    cMapUrl: '/cmaps/',
-    standardFontDataUrl: '/standard_fonts/',
-    wasmUrl: '/wasm/',
-};
-
-const resizeObserverOptions = {};
-
-const maxWidth = 1200;
-
-type PDFFile = string | File | null;
-
-export default function PDFViewer() {
-    const [file, setFile] = useState<PDFFile>(null);
-    const [numPages, setNumPages] = useState<number>();
-    const [containerRef, setContainerRef] = useState<HTMLElement | null>(null);
-    const [containerWidth, setContainerWidth] = useState<number>();
-    const [remoteUrl, setRemoteUrl] = useState<string | null>(null);
-
-    const onResize = useCallback<ResizeObserverCallback>((entries) => {
-        const [entry] = entries;
-
-        if (entry) {
-            setContainerWidth(entry.contentRect.width);
+    useEffect(() => {
+        let active = true
+        async function load() {
+            setLoading(true)
+            setError(null)
+            try {
+                const res = await fetch(`${apiBase}/pdfs`)
+                if (!res.ok) throw new Error(`Falha ao buscar PDFs: ${res.status}`)
+                const data: PdfItem[] = await res.json()
+                if (active) setPdfs(data)
+            } catch (e) {
+                if (active) setError((e as Error).message)
+            } finally {
+                if (active) setLoading(false)
+            }
         }
-    }, []);
-
-    useResizeObserver(containerRef, resizeObserverOptions, onResize);
-
-    async function handleFileSelect(selectedFile: File): Promise<void> {
-        setFile(selectedFile);
-        setRemoteUrl(null);
-
-        // Upload to backend
-        try {
-            const form = new FormData();
-            form.append('file', selectedFile);
-
-            const apiBase = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
-            const res = await fetch(`${apiBase}/upload`, {
-                method: 'POST',
-                body: form,
-            });
-            if (!res.ok) throw new Error('Falha no upload');
-            const data: { id: number; filename: string } = await res.json();
-            const fileUrl = `${apiBase}/pdf/${data.id}`;
-            setRemoteUrl(fileUrl);
-            // Switch to remote URL for viewing to ensure using canonical stored copy
-            setFile(fileUrl);
-        } catch (err) {
-            console.error(err);
-            // Keep local preview even if upload failed
+        load()
+        return () => {
+            active = false
         }
-    }
-
-    function onDocumentLoadSuccess({ numPages: nextNumPages }: PDFDocumentProxy): void {
-        setNumPages(nextNumPages);
-    }
+    }, [apiBase])
 
     return (
-        <div className="min-h-screen bg-background font-sans m-0">
-            <header className="bg-card text-card-foreground p-5 shadow-lg">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-inherit m-0">react-pdf sample page</h1>
-                    {file && (
-                        <button
-                            onClick={() => setFile(null)}
-                            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                        >
-                            Carregar outro arquivo
-                        </button>
-                    )}
+        <div className="min-h-screen bg-background text-foreground">
+            <header className="border-b bg-card text-card-foreground">
+                <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
+                    <h1 className="text-xl font-semibold">PDF Dashboard</h1>
+                    <a
+                        href="https://github.com/felipebrgs1/PDFReactView"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-muted-foreground hover:underline"
+                    >
+                        Repo
+                    </a>
                 </div>
             </header>
 
-            {/* Renderizar FileUploader apenas quando não há arquivo selecionado */}
-            {!file && (
-                <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-background/80 z-50">
-                    <FileUploader
-                        onFileSelect={handleFileSelect}
-                        currentFile={null}
-                    />
-                </div>
-            )}
-
-            {/* Renderizar PDF apenas quando há arquivo selecionado */}
-            {file && (
-                <div className="flex flex-col items-center my-2.5 mx-0 p-2.5">
-                    <div
-                        className="w-full max-w-[calc(100%-2em)] my-4 mx-0"
-                        ref={setContainerRef}
-                    >
-                        <Document
-                            file={file}
-                            onLoadSuccess={onDocumentLoadSuccess}
-                            options={options}
-                            className="flex flex-col items-center"
-                        >
-                            {Array.from(new Array(numPages), (_el, index) => (
-                                <Page
-                                    key={`page_${index + 1}`}
-                                    pageNumber={index + 1}
-                                    width={containerWidth ? Math.min(containerWidth, maxWidth) : maxWidth}
-                                    className="my-4 mx-0 shadow-lg"
-                                />
-                            ))}
-                        </Document>
+            <main className="mx-auto max-w-5xl px-4 py-6">
+                <section className="mb-6">
+                    <div className="rounded-lg border bg-card text-card-foreground p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-medium">Arquivos PDF</h2>
+                                <p className="text-sm text-muted-foreground">Clique para abrir</p>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                {loading ? 'Carregando…' : `${pdfs.length} itens`}
+                            </div>
+                        </div>
+                        <div className="mt-4">
+                            {error && (
+                                <div className="text-sm text-red-600">{error}</div>
+                            )}
+                            {!error && loading && (
+                                <ul className="space-y-2">
+                                    {skeletonKeys.map((k) => (
+                                        <li key={k} className="h-10 animate-pulse rounded bg-muted" />
+                                    ))}
+                                </ul>
+                            )}
+                            {!error && !loading && pdfs.length === 0 && (
+                                <div className="text-sm text-muted-foreground">Nenhum PDF encontrado.</div>
+                            )}
+                            {!error && !loading && pdfs.length > 0 && (
+                                <ul className="divide-y rounded-md border">
+                                    {pdfs.map((p) => {
+                                        const viewPath = `/view/${p.id}`
+                                        const when = p.createdAt ? new Date(p.createdAt).toLocaleString() : ''
+                                        return (
+                                            <li key={p.id} className="group">
+                                                <a
+                                                    href={viewPath}
+                                                    className="flex items-center justify-between px-4 py-3 hover:bg-accent hover:text-accent-foreground"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <div className="truncate font-medium">{p.filename}</div>
+                                                        <div className="text-xs text-muted-foreground truncate">{viewPath}</div>
+                                                    </div>
+                                                    <div className="ml-4 text-xs text-muted-foreground whitespace-nowrap">{when}</div>
+                                                </a>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            )}
+                        </div>
                     </div>
-                    {remoteUrl && (
-                        <div className="mt-2 text-sm text-muted-foreground">Armazenado em: <a className="underline" href={remoteUrl} target="_blank" rel="noreferrer">{remoteUrl}</a></div>
-                    )}
-                </div>
-            )}
+                </section>
+            </main>
         </div>
-    );
+    )
 }
