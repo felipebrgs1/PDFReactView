@@ -17,7 +17,7 @@ export const pdfFilesTable = pgTable("pdf_files", {
 	id: integer().primaryKey().generatedAlwaysAsIdentity(),
 	filename: varchar({ length: 512 }).notNull(),
 	mimeType: varchar({ length: 128 }).notNull(),
-	// Store as base64 text for compatibility
+	// Store object key (S3/MinIO) instead of raw binary
 	data: text().notNull(),
 	createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
 });

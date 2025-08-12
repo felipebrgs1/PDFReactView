@@ -4,10 +4,21 @@ import { cors } from "hono/cors";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { pdfFilesTable } from "../db/schema.js";
+import {
+	ensureBucketExists,
+	getPdfStream,
+	readBodyToBytes,
+	uploadPdf,
+} from "../storage/minio.js";
 
 export function registerRoutes(app: Hono) {
 	// CORS
 	app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"] }));
+
+	// Ensure bucket exists at startup (fire and forget)
+	ensureBucketExists().catch((err) => {
+		console.error("Failed ensuring MinIO bucket:", err);
+	});
 
 	app.get("/", (c) => c.text("Hono up"));
 	app.get("/health", (c) =>
@@ -32,13 +43,15 @@ export function registerRoutes(app: Hono) {
 			return c.json({ error: "Only PDF files are allowed" }, 400);
 		}
 
+		// Upload to MinIO and store only the object key
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
-		const base64 = buffer.toString("base64");
+		const key = `${Date.now()}-${crypto.randomUUID()}.pdf`;
+		await uploadPdf({ key, body: buffer, contentType: file.type });
 
 		const insertedArr = await db
 			.insert(pdfFilesTable)
-			.values({ filename: file.name, mimeType: file.type, data: base64 })
+			.values({ filename: file.name, mimeType: file.type, data: key })
 			.returning({
 				id: pdfFilesTable.id,
 				filename: pdfFilesTable.filename,
@@ -64,7 +77,10 @@ export function registerRoutes(app: Hono) {
 		const row = rows[0];
 		if (!row) return c.json({ error: "Not found" }, 404);
 
-		const raw = Buffer.from(row.data, "base64");
+		// Fetch from MinIO using stored key
+		const { body, contentType } = await getPdfStream({ key: row.data });
+		if (!body) return c.json({ error: "Not found" }, 404);
+		const bytes = await readBodyToBytes(body);
 		// Build a safe Content-Disposition with ASCII fallback + RFC 5987 utf-8 filename*
 		const originalName = row.filename ?? "file.pdf";
 		// Remove diacritics then strip/replace anything non-ASCII-safe for header value
@@ -75,9 +91,9 @@ export function registerRoutes(app: Hono) {
 			.replace(/["\\]/g, ""); // drop quotes/backslashes to keep quoted-string safe
 		const encodedUtf8 = encodeURIComponent(originalName);
 
-		return new Response(raw, {
+		return new Response(bytes, {
 			headers: {
-				"Content-Type": row.mimeType,
+				"Content-Type": contentType || row.mimeType,
 				// Example: inline; filename="fallback.pdf"; filename*=UTF-8''real%20ñame.pdf
 				"Content-Disposition": `inline; filename="${asciiFallback}"; filename*=UTF-8''${encodedUtf8}`,
 				"Cache-Control": "public, max-age=31536000, immutable",

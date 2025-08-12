@@ -9,12 +9,19 @@ services:
     env_file: .env
     environment:
       - NODE_ENV=development
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=pdfs
+      - MINIO_USE_SSL=false
     volumes:
-    - ../../apps/server:/app/apps/server
+      - ../../apps/server:/app/apps/server
       - bun_cache:/root/.bun
-    command: bun run --watch src/index.ts
+    command: bun run src/index.ts
     depends_on:
       - postgres
+      - minio
   postgres:
     image: postgres:17-alpine
     ports:
@@ -30,7 +37,24 @@ services:
       retries: 10
     volumes:
       - pg_data:/var/lib/postgresql/data
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-01-20T14-49-07Z
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - minio_data:/data
 
 volumes:
   pg_data: {}
   bun_cache: {}
+  minio_data: {}

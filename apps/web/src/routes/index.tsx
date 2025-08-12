@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 type PdfItem = {
@@ -45,14 +45,19 @@ function HomeDashboard() {
 			<header className="border-b bg-card text-card-foreground">
 				<div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
 					<h1 className="text-xl font-semibold">PDF Dashboard</h1>
-					<a
-						href="https://github.com/felipebrgs1/PDFReactView"
-						target="_blank"
-						rel="noreferrer"
-						className="text-sm text-muted-foreground hover:underline"
-					>
-						Repo
-					</a>
+					<nav className="flex items-center gap-4 text-sm">
+						<Link to="/upload" className="text-muted-foreground hover:underline">
+							Upload
+						</Link>
+						<a
+							href="https://github.com/felipebrgs1/PDFReactView"
+							target="_blank"
+							rel="noreferrer"
+							className="text-muted-foreground hover:underline"
+						>
+							Repo
+						</a>
+					</nav>
 				</div>
 			</header>
 
