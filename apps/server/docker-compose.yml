@@ -38,7 +38,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-01-20T14-49-07Z
+    image: minio/minio:latest
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
